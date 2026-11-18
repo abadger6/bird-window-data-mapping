@@ -10,6 +10,15 @@ Items deliberately left for after launch.
   currently credits "Global Bird Collision Mapper (FLAP Canada and partner
   monitoring groups)" with a link. Update if they give preferred wording.
 
+## Data coverage
+
+- [ ] **Add fuller Chicago data.** The Global Bird Collision Mapper export has
+  only 2018–2022 Chicago Bird Collision Monitors records and 130 reports near
+  McCormick Place. The Field Museum's long-term McCormick survey and Chicago
+  Bird Collision Monitors' full archive would show Chicago's true scale. Both
+  need permission and a second loader in `pipeline/collisions.py` (dedupe
+  against the export on date + location + species).
+
 ## Clean-up
 
 - [ ] **Retire the kepler.gl viewer (`web/`).** Before deleting:

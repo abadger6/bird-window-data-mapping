@@ -88,19 +88,29 @@ def test_species_case_variants_merge_to_most_common():
 
 def test_part_heights_raise_only_when_taller():
     g = gpd.GeoDataFrame({
-        "id": ["a", "b", "c", "d"],
-        "height_m": [20.0, 50.0, 6.0, 10.0],
-        "height_source": ["overture", "overture", "assumed", "overture"],
-        "geometry": [box(0, 0, 10, 10)] * 4,
+        "id": ["a", "b", "c", "d", "e"],
+        "height_m": [20.0, 50.0, 6.0, 10.0, 30.0],
+        "height_source": ["overture", "overture", "assumed", "overture", "overture"],
+        "geometry": [box(0, 0, 40, 40)] * 5,  # 1,600 m² footprints
     }, crs=buildings.PROJECTED_CRS)
     parts = pd.DataFrame({
-        "building_id": ["a", "a", "b", "c", "d"],
-        "height": [None, 180.0, 30.0, None, 9999.0],
-        "num_floors": [10, None, None, 2, None],
+        "building_id": ["a", "a", "b", "c", "d", "e"],
+        "height": [None, 180.0, 30.0, None, 9999.0, 100.0],
+        "num_floors": [10, None, None, 2, None, None],
+        "area_m2": [400.0, 400.0, 400.0, 400.0, 400.0, 20.0],  # e's part is a 20 m² mast
     })
     out = buildings.apply_part_heights(g, parts)
-    assert out["height_m"].tolist() == [180.0, 50.0, 6.0, 10.0]
-    assert out["height_source"].tolist() == ["parts", "overture", "parts", "overture"]
+    assert out["height_m"].tolist() == [180.0, 50.0, 6.0, 10.0, 30.0]
+    assert out["height_source"].tolist() == ["parts", "overture", "parts", "overture", "overture"]
+
+
+def test_part_heights_ignore_parts_small_relative_to_footprint():
+    # A 150 m² part on a 10,000 m² hall (1.5%) is a mast, not a tower.
+    g = gpd.GeoDataFrame({"id": ["hall"], "height_m": [30.0], "height_source": ["overture"],
+                          "geometry": [box(0, 0, 100, 100)]}, crs=buildings.PROJECTED_CRS)
+    parts = pd.DataFrame({"building_id": ["hall"], "height": [100.0], "num_floors": [None],
+                          "area_m2": [150.0]})
+    assert buildings.apply_part_heights(g, parts)["height_m"].tolist() == [30.0]
 
 
 def test_private_home_rule():
@@ -123,3 +133,14 @@ def test_private_home_rule_requires_metric_crs():
                          geometry=[box(0, 0, 1, 1)], crs="EPSG:4326")
     with pytest.raises(ValueError):
         privacy.is_private_home(g)
+
+
+def test_keep_base_height_override():
+    bid = next(iter(buildings.KEEP_BASE_HEIGHT))
+    g = gpd.GeoDataFrame({"id": [bid], "height_m": [30.0], "height_source": ["overture"],
+                          "geometry": [box(0, 0, 100, 100)]}, crs=buildings.PROJECTED_CRS)
+    parts = pd.DataFrame({"building_id": [bid], "height": [100.0], "num_floors": [None],
+                          "area_m2": [10_000.0]})
+    out = buildings.apply_part_heights(g, parts)
+    assert out["height_m"].tolist() == [30.0]
+    assert out["height_source"].tolist() == ["overture"]

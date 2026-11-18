@@ -26,6 +26,19 @@ DEFAULT_MIN_AREA_M2 = 20.0
 DEFAULT_MIN_HEIGHT_M = 2.0
 DEFAULT_MAX_HEIGHT_M = 600.0
 DEFAULT_ASSUMED_HEIGHT_M = 6.0
+# A building part only sets the height if it is a real volume, not a mast:
+MIN_PART_M2 = 100.0
+MIN_PART_SHARE = 0.05
+
+# Buildings whose Overture building-part height contradicts reality, checked by
+# hand. For these we keep Overture's own base height instead of the part height.
+# Add an entry only with the reason; see docs/data-notes.md.
+KEEP_BASE_HEIGHT = {
+    # McCormick Place Lakeside Center (Chicago): a part covering the whole
+    # 75,000 m² hall is tagged 100 m; the building's own height is 30 m and
+    # the hall is a low, wide exhibition building.
+    "22e8aa23-5afa-483f-844c-e40b64fc220e": "Part height (100 m) contradicts a low exhibition hall",
+}
 
 # North America Albers Equal Area — one metric CRS for the whole US + Canada
 # extent. Distance distortion is a few percent at most, which is immaterial
@@ -107,6 +120,12 @@ def _fetch_parts_one(key: str, bbox: tuple, cache_dir: Path, release: str | None
     g = overturemaps.geodataframe("building_part", bbox=bbox, release=release)
     cols = ["building_id", "height", "num_floors"]
     df = pd.DataFrame({c: g[c] if c in g.columns else pd.Series(dtype="float64") for c in cols})
+    # Part footprint area, so thin masts/antennas/pylons can be told apart from towers.
+    if len(g):
+        geo = g.set_crs("EPSG:4326") if g.crs is None else g
+        df["area_m2"] = geo.geometry.to_crs(PROJECTED_CRS).area.round(1).values
+    else:
+        df["area_m2"] = pd.Series(dtype="float64")
     df.to_parquet(path)
 
 
@@ -115,7 +134,7 @@ def fetch_parts(bldgs: gpd.GeoDataFrame, cache_dir: str | Path, *, cell_deg: flo
     """Fetch Overture ``building_part`` rows covering ``bldgs`` (EPSG:4326).
 
     Parts are queried per grid cell using the tight bbox of the buildings in
-    that cell; results are cached per cell. Returns building_id/height/num_floors.
+    that cell; results are cached per cell. Returns building_id/height/num_floors/area_m2.
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -139,18 +158,24 @@ def fetch_parts(bldgs: gpd.GeoDataFrame, cache_dir: str | Path, *, cell_deg: flo
                 print(f"  {i}/{len(todo)}", flush=True)
     files = sorted(cache_dir.glob("*.parquet"))
     return pd.concat([pd.read_parquet(p) for p in files], ignore_index=True) if files else pd.DataFrame(
-        columns=["building_id", "height", "num_floors"])
+        columns=["building_id", "height", "num_floors", "area_m2"])
 
 
 def apply_part_heights(gdf: gpd.GeoDataFrame, parts: pd.DataFrame,
                        floor_height_m: float = DEFAULT_FLOOR_HEIGHT_M,
-                       max_h: float = DEFAULT_MAX_HEIGHT_M, margin_m: float = 1.0) -> gpd.GeoDataFrame:
-    """Raise ``height_m`` to the top of the tallest building part when that is taller.
+                       max_h: float = DEFAULT_MAX_HEIGHT_M, margin_m: float = 1.0,
+                       min_part_share: float = MIN_PART_SHARE,
+                       min_part_m2: float = MIN_PART_M2) -> gpd.GeoDataFrame:
+    """Raise ``height_m`` to the top of the tallest *substantial* building part.
 
     Overture often models a tower as a ``building_part`` above a low base
-    footprint; the base's own ``height`` then understates the building.
-    Part top = part ``height`` (else ``num_floors`` × 3 m). Requires
-    ``assign_heights`` to have run.
+    footprint; the base's own ``height`` then understates the building. But
+    parts also model masts, antennas and roof pylons (e.g. McCormick Place's
+    100 m masts on a 30 m hall, Willis Tower's antennas). Stretching the whole
+    footprint to those would be wrong, so a part only counts when its area is
+    at least ``min_part_m2`` and at least ``min_part_share`` of the base
+    footprint. Part top = part ``height`` (else ``num_floors`` × 3 m).
+    Requires ``assign_heights`` to have run and a metric CRS on ``gdf``.
     """
     gdf = gdf.copy()
     if parts.empty:
@@ -158,8 +183,12 @@ def apply_part_heights(gdf: gpd.GeoDataFrame, parts: pd.DataFrame,
     ph = pd.to_numeric(parts["height"], errors="coerce").fillna(
         pd.to_numeric(parts["num_floors"], errors="coerce") * floor_height_m)
     ph = ph.where(ph.between(DEFAULT_MIN_HEIGHT_M, max_h))
-    top = ph.groupby(parts["building_id"]).max()
+    base_area = parts["building_id"].map(pd.Series(gdf.geometry.area.values, index=gdf["id"].values))
+    area = pd.to_numeric(parts.get("area_m2"), errors="coerce")
+    substantial = (area >= min_part_m2) & (area >= min_part_share * base_area)
+    top = ph[substantial].groupby(parts.loc[substantial, "building_id"]).max()
     part_top = gdf["id"].map(top)
+    part_top[gdf["id"].isin(KEEP_BASE_HEIGHT)] = float("nan")
     taller = part_top.notna() & ((part_top > gdf["height_m"] + margin_m) | (gdf["height_source"] == "assumed"))
     gdf.loc[taller, "height_m"] = part_top[taller].round(1)
     gdf.loc[taller, "height_source"] = "parts"

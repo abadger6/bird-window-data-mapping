@@ -66,7 +66,7 @@ def main() -> int:
 
     # Towers modelled as building_parts above a low base footprint.
     release = (ROOT / "data/cache/OVERTURE_RELEASE").read_text().strip()
-    parts = buildings.fetch_parts(hit.to_crs("EPSG:4326"), ROOT / "data/cache/building_parts", release=release)
+    parts = buildings.fetch_parts(hit.to_crs("EPSG:4326"), ROOT / "data/cache/building_parts_v2", release=release)
     hit = buildings.apply_part_heights(hit, parts)
 
     # ---- private-home exclusion (pipeline/privacy.py) --------------------

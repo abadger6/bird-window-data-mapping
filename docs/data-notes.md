@@ -53,18 +53,31 @@ buildings**.
 
   | Source | Buildings | Share |
   |---|---:|---:|
-  | Overture `height` | 3,974 | 58% |
-  | Top of the tallest Overture `building_part` | 846 | 12% |
-  | `num_floors` × 3 m | 1,121 | 16% |
-  | No height data, drawn at 6 m and labelled in the tooltip | 951 | 14% |
+  | Overture `height` | 4,016 | 58% |
+  | Top of the tallest substantial Overture `building_part` | 787 | 11% |
+  | `num_floors` × 3 m | 1,128 | 16% |
+  | No height data, drawn at 6 m and labelled in the tooltip | 961 | 14% |
 
   Overture often models a tower as a separate `building_part` sitting on a
   low base footprint. Reports snap to the base, so the base's own height
-  understates the building. Where any part is more than 1 m taller than the
-  base, or the base has no height, the building takes the top of its
-  tallest part. Part tops come from the part's `height`, or else its
-  `num_floors` × 3 m. Example: Consilium Place (Toronto, 9,900 birds) goes
-  from 22 m to 64 m.
+  understates the building. Where a part is more than 1 m taller than the
+  base, or the base has no height, the building takes the top of that part.
+  Part tops come from the part's `height`, or else its `num_floors` × 3 m.
+  Example: Consilium Place (Toronto, 9,900 birds) goes from 22 m to 64 m.
+
+  **Only substantial parts count:** at least 100 m² and at least 5% of the
+  footprint. Overture also models masts, antennas and roof pylons as parts,
+  and stretching a whole footprint to those is wrong. For example, Willis
+  Tower would otherwise be 527 m (antennas) instead of 442 m (roof).
+
+  **Manual override:** `KEEP_BASE_HEIGHT` in `pipeline/buildings.py` keeps
+  Overture's base height where a part's height is plainly wrong. Each entry
+  records its reason. Currently one building: the McCormick Place Lakeside
+  Center in Chicago, where a part covering the whole 75,000 m² hall is tagged
+  100 m against the building's own 30 m. A general rule wasn't used: where a
+  part covers the whole footprint it is usually *more* accurate than the
+  base. Chicago City Hall is 36 m by its part against a 23 m base, for
+  example.
 
 ## Attributing reports to buildings (`pipeline/attribution.py`)
 
@@ -110,6 +123,13 @@ In total, **6,793 reports and 6,956 birds (5.6%)** are excluded.
 - **These are reports, not risk.** The counts mostly reflect where people
   monitored. Toronto, where FLAP Canada has monitored since the 1990s,
   supplies 79% of the reports (Greater Toronto Area bounding box).
+- **Chicago is under-represented.** The export holds only 2,035 Chicago Bird
+  Collision Monitors reports, all from 2018–2022. It has just 130 reports
+  near McCormick Place (2018–2021), so McCormick ranks 144th here (96 birds at
+  the Lakeside Center). The long-term McCormick Place figures cited in the
+  press most likely come from the Field Museum's decades-long survey there,
+  which doesn't appear to be in the Global Bird Collision Mapper export.
+  Rankings across cities reflect which datasets the export contains.
 - **Source heights can be wrong.** 14% of buildings have no height and are
   drawn at 6 m. Overture heights can also understate buildings whose towers
   aren't modelled as parts.
