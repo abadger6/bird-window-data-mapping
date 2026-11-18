@@ -181,7 +181,8 @@ def build(data_url: str, chapters: list[Chapter], meta: dict) -> dict:
                 "(FLAP Canada and partners). "
                 "Buildings: © Overture Maps Foundation (ODbL)."),
         theme="dark",
-        start_slide="global",
+        # Preview of chapter 1 (US + Canada), so exiting straight away lands on the data.
+        start_slide="adjacent",
     )
     for c in chapters:
         enter = [{"layerId": slice_ids[col], "opacity": 1.0 if col == c.layer else 0.0, "duration": 1200}
