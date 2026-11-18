@@ -52,10 +52,21 @@ def test_project_layers_and_story():
     assert all(l["metadata"]["vectorState"]["renderMode"] == "geojson" for l in layers)
     assert all(l["source"]["url"].startswith("https://example.org/site/data/") for l in layers)
     visible = [l["name"] for l in layers if l["visible"]]
-    assert visible == ["Buildings: birds reported, all years", "Reports 2021–2026 (2)"]
-    # species filter is a text match (checkbox lists cap at 200 values)
-    pts = [l for l in layers if l["name"].startswith("Reports")]
-    assert all(next(q for q in l["quickFilters"] if q["field"] == "species")["kind"] == "text" for l in pts)
+    assert visible == ["All years", "2021–2026  (2 reports)"]
+    # folders: buildings, reports, and a collapsed "Earlier years" inside reports
+    groups = {g["id"]: g for g in proj["layerGroups"]}
+    assert groups[geolibre_project.GROUP_EARLIER]["parentId"] == geolibre_project.GROUP_REPORTS
+    assert groups[geolibre_project.GROUP_EARLIER]["collapsed"] is True
+    by_group = [l["groupId"] for l in layers]
+    for gid in set(by_group):  # each folder's layers are contiguous
+        idx = [i for i, g in enumerate(by_group) if g == gid]
+        assert idx == list(range(idx[0], idx[-1] + 1))
+    # filters only on report layers, species as a text match (checkbox lists cap at 200 values)
+    pts = [l for l in layers if l["groupId"] != geolibre_project.GROUP_BUILDINGS]
+    bld = [l for l in layers if l["groupId"] == geolibre_project.GROUP_BUILDINGS]
+    assert all(not l.get("quickFilters") for l in bld)
+    assert all([q["field"] for q in l["quickFilters"]] == ["species", "outcome", "season"] for l in pts)
+    assert all(l["quickFilters"][0]["kind"] == "text" for l in pts)
     assert len(proj["storymap"]["chapters"]) == len(ch)
     # the last chapter tells GeoLibre readers how to leave the story and explore
     assert "Exit" in proj["storymap"]["chapters"][-1]["description"]

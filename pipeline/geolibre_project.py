@@ -3,10 +3,13 @@
 Uses the official ``geolibre`` Python package so the file matches what the
 app writes. Layers read the GeoParquet files by URL; nothing is inlined.
 
-Layers, top to bottom:
-    Reports (3 eras)     points coloured by outcome, with quick filters; latest era on
-    Buildings (4 views)  3D, height = building height, colour = birds;
-                         one layer per ready-made slice, only "All years" on
+Layers panel, top to bottom (folders keep it short):
+    Reports                    points coloured by outcome
+        2021–2026              on; filters: species, outcome, season
+        Earlier years/         collapsed folder: 2014–2020, 1996–2013 (off)
+    Buildings — one view at a time
+        All years              on; 3D, height = building height, colour = birds
+        Fall / Spring / Last 5 years   off; ready-made slices, no filters
 """
 from __future__ import annotations
 
@@ -20,11 +23,30 @@ BIRD_STOPS = [  # lower bounds, matching the legend used everywhere else
 ]
 OUTCOME_COLORS = {"Dead": "#E8575A", "Alive": "#4FB3BF", "Unknown": "#A8A8B3", "Mixed": "#E8B04F"}
 
-BUILDING_SLICES = [  # (column, layer name)
-    ("birds", "Buildings: birds reported, all years"),
-    ("birds_fall", "Buildings: fall migration (Aug–Nov)"),
-    ("birds_spring", "Buildings: spring migration (Mar–May)"),
-    ("birds_recent", "Buildings: last 5 years"),
+BUILDING_SLICES = [  # (column, layer name), in panel order
+    ("birds", "All years"),
+    ("birds_fall", "Fall migration (Aug–Nov)"),
+    ("birds_spring", "Spring migration (Mar–May)"),
+    ("birds_recent", "Last 5 years"),
+]
+GROUP_REPORTS = "grp-reports"
+GROUP_EARLIER = "grp-reports-earlier"
+GROUP_BUILDINGS = "grp-buildings"
+LAYER_GROUPS = [
+    {"id": GROUP_REPORTS, "name": "Reports (one point each)", "collapsed": False, "visible": True, "opacity": 1},
+    {"id": GROUP_EARLIER, "name": "Earlier years", "parentId": GROUP_REPORTS,
+     "collapsed": True, "visible": True, "opacity": 1},
+    {"id": GROUP_BUILDINGS, "name": "Buildings: one view at a time", "collapsed": False,
+     "visible": True, "opacity": 1},
+]
+# Filters shown on each report layer. Kept short on purpose: year is covered by
+# the era layers, and monitoring group (107 values) can be added in the panel.
+REPORT_FILTERS = [
+    # Text match, not checkboxes: GeoLibre caps checkbox lists at 200 distinct
+    # values and recent eras have 300+ species. "warbler" matches every warbler.
+    {"id": "species", "field": "species", "kind": "text", "operator": "contains", "text": ""},
+    {"id": "outcome", "field": "outcome", "kind": "categorical", "values": []},
+    {"id": "season", "field": "season", "kind": "categorical", "values": []},
 ]
 
 PLACES = [  # bookmarks: name, lng, lat, zoom, pitch, bearing
@@ -61,10 +83,7 @@ def _building_layer(url: str, column: str, name: str, visible: bool) -> dict:
     layer = _app_painted_layer(name, url)
     layer["visible"] = visible
     layer["filterExpression"] = [">", ["get", column], 0]
-    layer["quickFilters"] = [
-        {"id": "country", "field": "country", "kind": "categorical", "values": []},
-        {"id": "height", "field": "height_m", "kind": "range", "min": None, "max": None},
-    ]
+    layer["groupId"] = GROUP_BUILDINGS
     return layer
 
 
@@ -100,9 +119,11 @@ def build(data_url: str, chapters: list[Chapter], meta: dict) -> dict:
     proj = gp.build_empty_project("Bird–Window Collisions (US & Canada)", center=[-88.0, 44.5], zoom=3.4)
     authoring.set_basemap(proj, BASEMAP)
 
-    # Buildings first, so the points layer added last draws on top.
+    # The layers array runs bottom-up (the panel lists the last layer first), and
+    # each folder's layers must be contiguous. Buildings go in first, reversed so
+    # "All years" heads its folder; the points come last so they draw on top.
     slice_ids: dict[str, str] = {}
-    for column, name in BUILDING_SLICES:
+    for column, name in reversed(BUILDING_SLICES):
         lid = authoring.add_layer(proj, _building_layer(data_url + "buildings.parquet", column, name,
                                                         visible=(column == "birds")))
         authoring.apply_style(proj, lid, _building_style(column))
@@ -122,22 +143,17 @@ def build(data_url: str, chapters: list[Chapter], meta: dict) -> dict:
         slice_ids[column] = lid
 
     # Report points: one layer per era (each under GeoLibre's tiling threshold,
-    # so quick filters list every value). Only the latest era starts visible.
+    # so quick filters list every value). Only the latest era starts visible;
+    # older eras sit in a collapsed "Earlier years" folder.
     eras = meta["report_eras"]
     pts_ids: list[str] = []
     for i, era in enumerate(eras):
-        pts = _app_painted_layer(f"Reports {era['from']}–{era['to']} ({era['reports']:,})",
+        latest = i == len(eras) - 1
+        pts = _app_painted_layer(f"{era['from']}–{era['to']}  ({era['reports']:,} reports)",
                                  data_url + era["file"])
-        pts["visible"] = i == len(eras) - 1
-        pts["quickFilters"] = [
-            # Text match, not checkboxes: GeoLibre caps checkbox lists at 200 distinct
-            # values and recent eras have 300+ species. "warbler" matches every warbler.
-            {"id": "species", "field": "species", "kind": "text", "operator": "contains", "text": ""},
-            {"id": "outcome", "field": "outcome", "kind": "categorical", "values": []},
-            {"id": "season", "field": "season", "kind": "categorical", "values": []},
-            {"id": "year", "field": "year", "kind": "range", "min": None, "max": None},
-            {"id": "group", "field": "group", "kind": "categorical", "values": []},
-        ]
+        pts["visible"] = latest
+        pts["groupId"] = GROUP_REPORTS if latest else GROUP_EARLIER
+        pts["quickFilters"] = [dict(f) for f in REPORT_FILTERS]
         pid = authoring.add_layer(proj, pts)
         authoring.apply_style(proj, pid, {
             "vectorStyleMode": "categorized",
@@ -149,6 +165,9 @@ def build(data_url: str, chapters: list[Chapter], meta: dict) -> dict:
         })
         _set_report_popup(proj, pid)
         pts_ids.append(pid)
+
+    proj["layerGroups"] = [dict(g) for g in LAYER_GROUPS]
+    proj["selectedLayerId"] = slice_ids["birds"]
 
     for name, lng, lat, zoom, pitch, bearing in PLACES:
         authoring.add_bookmark(proj, name, center=[lng, lat], zoom=zoom, pitch=pitch, bearing=bearing)
