@@ -64,7 +64,12 @@ def main() -> int:
     project_url = site_url + PROJECT_NAME
     viewer = f"{args.viewer.rstrip('/')}/?url={quote(project_url, safe='')}&layout=viewer"
     (SITE / "config.json").write_text(json.dumps({
-        "explorer_url": args.share_url,
+        # Opens the share's project in GeoLibre with the Layers panel collapsed and
+        # in compact view (site/explorer-settings.json, applied for this visit only).
+        "explorer_url": (f"{args.viewer.rstrip('/')}/?url="
+                         f"{quote(args.share_url + '.geolibre.json', safe='')}&panels=collapsed"
+                         f"&settingsUrl={quote(site_url + 'explorer-settings.json', safe='')}"),
+        "share_url": args.share_url,
         "viewer_url": viewer,
         "project_url": project_url,
         "meta": {k: meta[k] for k in ("date_min", "date_max", "birds", "buildings_with_records",
