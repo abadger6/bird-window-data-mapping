@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from geolibre import authoring, project as gp
 
-from pipeline.story import Chapter
+from pipeline.story import OVERVIEW_CENTER, OVERVIEW_PITCH, OVERVIEW_ZOOM, Chapter
 
 BIRD_STOPS = [  # lower bounds, matching the legend used everywhere else
     (1, "#FFF3B0", "1"), (2, "#FDCB6E", "2–4"), (5, "#FC9A4E", "5–9"),
@@ -194,7 +194,7 @@ def build(data_url: str, chapters: list[Chapter], meta: dict) -> dict:
             pitch=c.pitch, bearing=c.bearing, alignment=c.alignment, on_enter=enter, chapter_id=c.id,
         )
 
-    authoring.set_view(proj, center=[-88.0, 44.5], zoom=3.4, pitch=0, bearing=0)
+    authoring.set_view(proj, center=list(OVERVIEW_CENTER), zoom=OVERVIEW_ZOOM, pitch=OVERVIEW_PITCH, bearing=0)
     proj.setdefault("metadata", {}).update({
         "source": "bird-window-data-mapping pipeline (scripts/05_build_site.py)",
         "generated": meta["generated"],

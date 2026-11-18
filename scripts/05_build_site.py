@@ -52,23 +52,24 @@ def main() -> int:
     proj = geolibre_project.build(site_url + "data/", chapters, meta)
     authoring.save_project(SITE / PROJECT_NAME, proj)
 
+    project_url = site_url + PROJECT_NAME
+    viewer = f"{args.viewer.rstrip('/')}/?url={quote(project_url, safe='')}&layout=viewer"
+    # Opens the share's project in GeoLibre with the Layers panel collapsed and
+    # in compact view (site/explorer-settings.json, applied for this visit only).
+    explorer = (f"{args.viewer.rstrip('/')}/?url={quote(args.share_url + '.geolibre.json', safe='')}"
+                f"&panels=collapsed&settingsUrl={quote(site_url + 'explorer-settings.json', safe='')}")
+
     (SITE / "story").mkdir(exist_ok=True)
     (SITE / "story/chapters.json").write_text(json.dumps({
         "title": "Bird–Window Collisions in the US & Canada",
         "subtitle": f"{meta['date_min'][:4]}–{meta['date_max'][:4]} · reports attributed to buildings",
         "bins": [[v, c, lab] for v, c, lab in geolibre_project.BIRD_STOPS],
-        "explore_url": args.share_url,
+        "explore_url": explorer,
         "chapters": [c.to_dict() for c in chapters],
     }, indent=2, ensure_ascii=False))
 
-    project_url = site_url + PROJECT_NAME
-    viewer = f"{args.viewer.rstrip('/')}/?url={quote(project_url, safe='')}&layout=viewer"
     (SITE / "config.json").write_text(json.dumps({
-        # Opens the share's project in GeoLibre with the Layers panel collapsed and
-        # in compact view (site/explorer-settings.json, applied for this visit only).
-        "explorer_url": (f"{args.viewer.rstrip('/')}/?url="
-                         f"{quote(args.share_url + '.geolibre.json', safe='')}&panels=collapsed"
-                         f"&settingsUrl={quote(site_url + 'explorer-settings.json', safe='')}"),
+        "explorer_url": explorer,
         "share_url": args.share_url,
         "viewer_url": viewer,
         "project_url": project_url,
@@ -78,7 +79,8 @@ def main() -> int:
 
     print(f"wrote {PROJECT_NAME} ({(SITE / PROJECT_NAME).stat().st_size / 1e3:.0f} kB), "
           f"{len(chapters)} chapters")
-    print("explorer (share):", args.share_url)
+    print("explorer:", explorer)
+    print("share page:", args.share_url)
     print("read-only viewer:", viewer)
     return 0
 

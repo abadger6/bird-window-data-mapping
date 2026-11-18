@@ -37,6 +37,13 @@ class Chapter:
         return asdict(self)
 
 
+# Continental view used to open and close the story. Tilted, so zooming into a
+# city after leaving the story shows buildings in 3D rather than flat outlines.
+OVERVIEW_CENTER = (-88.0, 42.0)
+OVERVIEW_ZOOM = 3.6
+OVERVIEW_PITCH = 45
+
+
 def _fmt(n: float) -> str:
     return f"{int(round(n)):,}"
 
@@ -69,7 +76,7 @@ def build_chapters(bldgs: gpd.GeoDataFrame, reports: pd.DataFrame, meta: dict) -
             f"{round(100 * dead_share)}% were found dead.<br><br>"
             "These are <i>reports</i>, not a census: a building with no reports may simply never "
             "have been checked.",
-            (-88.0, 44.5), 3.4, 0, 0, show_points=True),
+            OVERVIEW_CENTER, OVERVIEW_ZOOM, OVERVIEW_PITCH, 0, show_points=True),
         Chapter(
             "toronto", "Toronto: decades of dawn patrols",
             "Most reports come from Toronto, where FLAP Canada volunteers have walked downtown "
@@ -116,9 +123,11 @@ def build_chapters(bldgs: gpd.GeoDataFrame, reports: pd.DataFrame, meta: dict) -
             "with bookmarks. Click any building or point for details.<br><br>"
             f"<small>To protect reporters' privacy, {_fmt(excluded)} birds reported at private "
             "homes or away from any mapped building are not shown.</small>",
-            (-88.0, 44.5), 3.4, 0, 0, show_points=True,
+            OVERVIEW_CENTER, OVERVIEW_ZOOM, OVERVIEW_PITCH, 0, show_points=True,
             geolibre_note="<b>Click Exit (top left) or press Esc</b> to close the story. "
                           "The map stays open for you to explore; layers and filters are in "
-                          "the Layers panel.<br><br>"),
+                          "the Layers panel. Zoom into a city to see buildings in 3D; "
+                          "<b>tilt</b> with right-drag or Ctrl-drag (two-finger drag on touch "
+                          "screens).<br><br>"),
     ]
     return ch
