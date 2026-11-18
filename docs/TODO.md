@@ -58,10 +58,12 @@ Items deliberately left for after launch.
 
 ## Explorer bugs
 
-- [ ] **3D tilt doesn't work after leaving the story (reported 2026-11-18).**
-  Likely cause: GeoLibre turns map gestures off during a story presentation
-  (`suspendNavigation` in `packages/map/src/map-controller.ts`) and may not
-  restore drag-rotate on Exit. Not yet confirmed. Next step: open the share,
-  click Exit, and test right-drag / Ctrl-drag and Shift+↑. If confirmed,
-  report it upstream to opengeos/GeoLibre. Workaround: city bookmarks open
-  tilted (pitch 50–55°).
+- [x] **3D tilt after leaving the story (reported 2026-11-18; worked around).**
+  After Exit the map lay flat (pitch 0), and GeoLibre has no tilt control
+  except right-drag / Ctrl-drag / Shift+↑. Keyboard tilt was confirmed working
+  after Exit; mouse tilt couldn't be tested from automation, since synthetic
+  drags don't reach MapLibre even on a map without a story. Fix: the
+  overview views are tilted 45° (zooming in keeps the pitch, checked to zoom
+  13), and the last chapter and landing page explain how to tilt.
+  - [ ] If a real right-drag / Ctrl-drag still fails after Exit, report it
+    to opengeos/GeoLibre (suspect `suspendNavigation` restore).
