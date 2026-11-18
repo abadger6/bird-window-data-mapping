@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Thumbnail compose</title>
+<style>html,body{margin:0;background:#111318}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="630"></canvas>
+<script>
+// Original songbird silhouette, flying right with wings raised (viewBox 200x140).
+const BIRD = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
+  <g fill="FILL">
+    <!-- far wing (slightly dimmer) -->
+    <path opacity="0.78" d="M104,72 C110,52 122,30 146,10 C144,34 138,54 128,74 Z"/>
+    <!-- body, head and forked tail -->
+    <path d="M62,82 C76,70 104,64 134,66 C148,60 166,61 176,70 L193,74 L177,79
+             C172,90 158,98 136,100 C114,104 92,100 76,94 L44,104 L52,92 L36,88 L56,84 Z"/>
+    <!-- near wing -->
+    <path d="M96,76 C88,54 80,32 60,10 C88,22 112,46 130,76 Z"/>
+  </g>
+  <circle cx="171" cy="73" r="2.2" fill="EYE"/>
+</svg>`;
+
+function birdImage(fill, eye) {
+  const svg = BIRD.replace("FILL", fill).replace("EYE", eye);
+  const img = new Image();
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  return new Promise((r) => (img.onload = () => r(img)));
+}
+function loadImage(src) {
+  const img = new Image();
+  img.src = src;
+  return new Promise((r) => (img.onload = () => r(img)));
+}
+
+// opts: {title: bool, bird: {x, y, w, angle}, trail: bool}
+window.render = async (opts) => {
+  const c = document.getElementById("c"), g = c.getContext("2d");
+  g.drawImage(await loadImage("base.jpg?" + Date.now()), 0, 0, 1200, 630);
+
+  if (opts.title) {
+    // Legibility wash bottom-left, fading into the map.
+    const grad = g.createLinearGradient(0, 630, 0, 300);
+    grad.addColorStop(0, "rgba(17,19,24,0.92)");
+    grad.addColorStop(1, "rgba(17,19,24,0)");
+    g.fillStyle = grad; g.fillRect(0, 300, 1200, 330);
+  }
+  // Soft top wash so the bird reads against the busy skyline.
+  const top = g.createLinearGradient(0, 0, 0, 260);
+  top.addColorStop(0, "rgba(17,19,24,0.55)");
+  top.addColorStop(1, "rgba(17,19,24,0)");
+  g.fillStyle = top; g.fillRect(0, 0, 1200, 260);
+
+  const b = opts.bird;
+  if (opts.trail) {
+    // Dotted flight path arcing in from the upper right toward the bird.
+    g.save();
+    g.strokeStyle = "rgba(255,255,255,0.75)"; g.lineWidth = 5; g.setLineDash([1, 16]); g.lineCap = "round";
+    g.shadowColor = "rgba(17,19,24,0.9)"; g.shadowBlur = 6;
+    g.beginPath();
+    g.moveTo(1230, b.y - 30);
+    g.quadraticCurveTo(b.x + b.w + 140, b.y - 60, b.x + b.w - 10, b.y + b.w * 0.3);
+    g.stroke(); g.restore();
+  }
+  const bird = await birdImage(opts.fill || "#FFFFFF", "#111318");
+  g.save();
+  g.shadowColor = "rgba(0,0,0,0.55)"; g.shadowBlur = 18; g.shadowOffsetY = 6;
+  g.translate(b.x + b.w / 2, b.y + b.w * 0.35);
+  g.rotate((b.angle * Math.PI) / 180);
+  if (b.flip) g.scale(-1, 1);
+  g.shadowColor = "rgba(17,19,24,0.95)"; g.shadowBlur = 26; g.shadowOffsetY = 0;
+  g.drawImage(bird, -b.w / 2, -b.w * 0.35, b.w, b.w * 0.7);
+  g.shadowBlur = 8;
+  g.drawImage(bird, -b.w / 2, -b.w * 0.35, b.w, b.w * 0.7);
+  g.restore();
+
+  if (opts.title) {
+    g.fillStyle = "#ffffff";
+    g.font = "700 58px system-ui, -apple-system, 'Segoe UI', sans-serif";
+    g.fillText("Bird–Window Collisions", 56, 528);
+    g.fillStyle = "#e3e3ea";
+    g.font = "400 27px system-ui, -apple-system, 'Segoe UI', sans-serif";
+    g.fillText("US & Canada  ·  116,695 birds reported at 6,892 buildings", 58, 572);
+  }
+  return "ok";
+};
+window.save = async (name) => {
+  const url = document.getElementById("c").toDataURL("image/jpeg", 0.9);
+  return (await fetch("/" + name, { method: "POST", body: url })).text();
+};
+</script>
+</body>
+</html>

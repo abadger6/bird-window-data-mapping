@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Thumbnail render</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<style>
+  html, body { margin: 0; background: #111318; }
+  #map { width: 1200px; height: 630px; }
+  .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo { display: none !important; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+  // Same bins as the site legend (site/story/chapters.json).
+  const BINS = [[1, "#FFF3B0"], [2, "#FDCB6E"], [5, "#FC9A4E"], [10, "#F0603A"], [25, "#C7254E"], [100, "#7A0B5C"]];
+  const color = ["step", ["get", "birds"], BINS[0][1]];
+  for (const [v, c] of BINS.slice(1)) color.push(v, c);
+
+  const q = new URLSearchParams(location.search);
+  const view = {
+    center: [+(q.get("lng") || -79.3815), +(q.get("lat") || 43.6465)],
+    zoom: +(q.get("zoom") || 15.35), pitch: +(q.get("pitch") || 62), bearing: +(q.get("bearing") || -28),
+  };
+  window.ready = false;
+  const map = new maplibregl.Map({
+    container: "map", style: "https://tiles.openfreemap.org/styles/dark", ...view,
+    preserveDrawingBuffer: true, attributionControl: false, interactive: false, pixelRatio: 1,
+  });
+  map.on("load", () => {
+    map.addSource("b", { type: "geojson",
+      data: "https://abadger6.github.io/bird-window-data-mapping/data/buildings.geojson" });
+    map.addLayer({ id: "b", type: "fill-extrusion", source: "b", filter: [">", ["get", "birds"], 0],
+      paint: { "fill-extrusion-color": color, "fill-extrusion-height": ["get", "height_m"],
+               "fill-extrusion-opacity": 0.95, "fill-extrusion-vertical-gradient": true } });
+    map.once("idle", () => setTimeout(() => { window.ready = true; }, 800));
+  });
+  window.save = async (name) => {
+    const url = map.getCanvas().toDataURL("image/jpeg", 0.9);
+    const r = await fetch("/" + name, { method: "POST", body: url });
+    return r.text();
+  };
+</script>
+</body>
+</html>
