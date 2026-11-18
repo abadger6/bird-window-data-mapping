@@ -1,0 +1,41 @@
+# To do
+
+Items deliberately left for after launch.
+
+## Data source
+
+- [ ] **Confirm attribution wording with FLAP / the Global Bird Collision Mapper.**
+  The [download page](https://www.birdmapper.org/pages/download-the-data) and FAQ
+  state no licence, terms or citation string (checked 2026-11-18). The site
+  currently credits "Global Bird Collision Mapper (FLAP Canada and partner
+  monitoring groups)" with a link. Update if they give preferred wording.
+
+## Clean-up
+
+- [ ] **Retire the kepler.gl viewer (`web/`).** Before deleting:
+  `scripts/03_build_web_data.py` writes its intermediate bundle to
+  `web/public/data/`, which `scripts/04_export_geoparquet.py` reads. Move that
+  output to `data/processed/` and point step 04 at it. Then delete `web/` and
+  remove its entries from `.gitignore` and the README.
+- [ ] **Custom domain (optional).** Add a `CNAME` record at the DNS provider,
+  set the domain under **Settings → Pages**, and rebuild with that address. The
+  workflow already takes the address from Pages.
+- [ ] **Self-hosted GeoLibre viewer (optional).** The explorer opens in the
+  hosted `web.geolibre.app`, which runs Google Analytics and updates on its own
+  schedule (we tested on 3.9.0). To self-host, build GeoLibre for the site and
+  set `EXPLORER_VIEWER` in `.github/workflows/pages.yml`. See
+  [docs/geolibre-evaluation.md](geolibre-evaluation.md).
+
+## Keeping the data current
+
+- [ ] **Document and/or automate the refresh.** Today it is manual:
+  1. Download a new CSV from the Global Bird Collision Mapper into
+     `data/raw/flap_gbcm_export.csv`.
+  2. Run `scripts/01` to `04`. Step 02 reuses its building cache and only
+     fetches new areas.
+  3. Run `uv run pytest`.
+  4. Commit `site/data/` and push; Pages redeploys.
+
+  Options: a written runbook, or a scheduled job. A scheduled job would need
+  an automated way to get the export, which the download page doesn't offer
+  (it is a manual CSV download).

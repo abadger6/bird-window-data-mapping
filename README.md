@@ -127,9 +127,9 @@ docs/                  data notes, GeoLibre evaluation
 
 ## Data & licensing
 
-- **Collision reports:** Global Bird Collision Mapper (FLAP Canada and
-  partner monitoring groups). Confirm redistribution terms with FLAP before
-  publishing.
+- **Collision reports:** [Global Bird Collision Mapper](https://www.birdmapper.org/pages/download-the-data)
+  (FLAP Canada and partner monitoring groups), from its public download. The
+  site states no licence or citation wording; see [docs/TODO.md](docs/TODO.md).
 - **Buildings & boundaries:** © Overture Maps Foundation, **ODbL**:
   attribution required (shown on every page).
 - **Basemap:** OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors.

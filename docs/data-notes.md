@@ -6,7 +6,7 @@ release 2026-10-21.0 and the FLAP export downloaded 2026-11-17.
 
 ## Source
 
-The source is the Global Bird Collision Mapper export
+The source is the [Global Bird Collision Mapper](https://www.birdmapper.org/pages/download-the-data) public export
 (`Bird_Collision_Data_Map_view_…csv`, now at `data/raw/flap_gbcm_export.csv`).
 It has 134,685 rows dated 1996-03-26 to 2026-11-17.
 

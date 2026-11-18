@@ -158,7 +158,8 @@ def build(data_url: str, chapters: list[Chapter], meta: dict) -> dict:
         proj,
         title="Bird–Window Collisions in the US & Canada",
         subtitle=f"{meta['date_min'][:4]}–{meta['date_max'][:4]} · reports attributed to buildings",
-        footer=("Collision reports: Global Bird Collision Mapper (FLAP Canada and partners). "
+        footer=("Collision reports: <a href=\"https://www.birdmapper.org\">Global Bird Collision Mapper</a> "
+                "(FLAP Canada and partners). "
                 "Buildings: © Overture Maps Foundation (ODbL)."),
         theme="dark",
         start_slide="global",
