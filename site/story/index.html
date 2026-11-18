@@ -113,7 +113,7 @@
     step.querySelector("p").innerHTML = c.description; // authored in pipeline/story.py
     if (c.id === "close") {
       step.querySelector(".card").insertAdjacentHTML("beforeend",
-        '<a class="cta" href="../#explore">Open the explorer</a>');
+        `<a class="cta" href="${cfg.explore_url || "../#explore"}">Open the explorer</a>`);
     }
     story.appendChild(step);
   }

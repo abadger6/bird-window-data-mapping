@@ -57,4 +57,7 @@ def test_project_layers_and_story():
     pts = [l for l in layers if l["name"].startswith("Reports")]
     assert all(next(q for q in l["quickFilters"] if q["field"] == "species")["kind"] == "text" for l in pts)
     assert len(proj["storymap"]["chapters"]) == len(ch)
+    # the last chapter tells GeoLibre readers how to leave the story and explore
+    assert "Exit" in proj["storymap"]["chapters"][-1]["description"]
+    assert "Exit" not in ch[-1].description  # the standalone story page shows a button instead
     assert len(proj["bookmarks"]) == len(geolibre_project.PLACES)

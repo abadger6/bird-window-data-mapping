@@ -29,6 +29,9 @@ class Chapter:
     layer: str = "birds"  # building slice column shown in this chapter
     show_points: bool = False
     alignment: str = "left"
+    # Extra text shown only in the GeoLibre presentation (e.g. how to leave the
+    # story and explore); the standalone story page shows a button instead.
+    geolibre_note: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -107,11 +110,15 @@ def build_chapters(bldgs: gpd.GeoDataFrame, reports: pd.DataFrame, meta: dict) -
             f"report too. In the US, {us_top['label']} has the most reports ({_fmt(us_top['birds'])}).",
             _centroid(bldgs, us_top["label"]), 15.4, 55, -20),
         Chapter(
-            "close", "Explore the data",
-            "Open the explorer to filter reports by species, season, outcome and monitoring group, "
-            "and to compare fall, spring and recent-year building totals.<br><br>"
+            "close", "Your turn: explore the data",
+            "Switch between all-years, fall, spring and last-5-years building views; filter "
+            "reports by species, season, outcome and monitoring group; and jump between cities "
+            "with bookmarks. Click any building or point for details.<br><br>"
             f"<small>To protect reporters' privacy, {_fmt(excluded)} birds reported at private "
             "homes or away from any mapped building are not shown.</small>",
-            (-88.0, 44.5), 3.4, 0, 0),
+            (-88.0, 44.5), 3.4, 0, 0, show_points=True,
+            geolibre_note="<b>Click Exit (top left) or press Esc</b> to close the story. "
+                          "The map stays open for you to explore; layers and filters are in "
+                          "the Layers panel.<br><br>"),
     ]
     return ch

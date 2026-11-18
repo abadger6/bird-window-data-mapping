@@ -4,7 +4,7 @@ Reported bird–window collisions, each attributed to the building where the
 bird was found and shown in 3D at the building's real height. Made for
 decision-makers and scientists.
 
-**Live:** https://abadger6.github.io/bird-window-data-mapping/ · [story](https://abadger6.github.io/bird-window-data-mapping/story/) · [explorer](https://web.geolibre.app/?url=https%3A%2F%2Fabadger6.github.io%2Fbird-window-data-mapping%2Fbird-collisions.geolibre&layout=viewer)
+**Live:** https://abadger6.github.io/bird-window-data-mapping/ · [story](https://abadger6.github.io/bird-window-data-mapping/story/) · [explorer on share.geolibre.app](https://share.geolibre.app/abadgett/bird-window-collisions-us-canada) (unlisted)
 
 The public site (`site/`) has three parts:
 
@@ -12,7 +12,7 @@ The public site (`site/`) has three parts:
 |---|---|
 | **Landing page** (`site/index.html`) | Headline numbers, links, data downloads, caveats. |
 | **Story** (`site/story/`) | A scroll-driven story map (MapLibre) of where collisions are reported, the worst buildings, fall migration and species. |
-| **Explorer** (`site/bird-collisions.geolibre`) | A [GeoLibre](https://geolibre.app) project, opened in GeoLibre's read-only viewer: 3D buildings, every report as a point, quick filters, city bookmarks, and the same story as an in-app presentation. |
+| **Explorer** ([share.geolibre.app](https://share.geolibre.app/abadgett/bird-window-collisions-us-canada)) | The [GeoLibre](https://geolibre.app) project (`site/bird-collisions.geolibre`). It opens with the story as an in-app presentation; **Exit** hands over to the full map: 3D buildings, every report as a point, quick filters, city bookmarks. |
 
 **Privacy:** reports at private homes are excluded to protect reporters
 (5.6% of birds). See the data notes.
@@ -106,6 +106,25 @@ python3 -m http.server 8000
 The explorer link needs a GeoLibre app that can reach the files. Rebuild with
 `--site-url http://localhost:8000/site/` and a local GeoLibre build passed as
 `--viewer`.
+
+## Updating the share
+
+The explorer on share.geolibre.app is a copy of `site/bird-collisions.geolibre`
+that has to be uploaded by hand. It reads its data from GitHub Pages, so data
+refreshes show up there automatically. Changes to layers, styling or the story
+need a new upload:
+
+1. Build the project for the Pages address:
+
+```bash
+uv run python scripts/05_build_site.py --site-url https://abadger6.github.io/bird-window-data-mapping/
+```
+
+2. On the share page, go to **Manage → Upload New Version** and pick
+   `site/bird-collisions.geolibre`. The link stays the same.
+
+share.geolibre.app has no password protection (only Public, Unlisted or
+Private); the link is currently **Unlisted**.
 
 ## Layout
 

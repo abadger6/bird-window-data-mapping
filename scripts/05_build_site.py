@@ -29,6 +29,9 @@ from pipeline import geolibre_project, story  # noqa: E402
 SITE = ROOT / "site"
 PROJECT_NAME = "bird-collisions.geolibre"
 DEFAULT_VIEWER = "https://web.geolibre.app/"
+# The default place to explore: the project on share.geolibre.app (uploaded by
+# hand from site/bird-collisions.geolibre; see README "Updating the share").
+DEFAULT_SHARE_URL = "https://share.geolibre.app/abadgett/bird-window-collisions-us-canada"
 
 
 def main() -> int:
@@ -36,6 +39,8 @@ def main() -> int:
     ap.add_argument("--site-url", required=True, help="public URL of site/, e.g. https://user.github.io/repo/")
     ap.add_argument("--viewer", default=DEFAULT_VIEWER,
                     help="GeoLibre web app that opens the project (hosted, or a self-hosted copy)")
+    ap.add_argument("--share-url", default=DEFAULT_SHARE_URL,
+                    help="share.geolibre.app page the site sends readers to explore")
     args = ap.parse_args()
     site_url = args.site_url.rstrip("/") + "/"
 
@@ -52,13 +57,15 @@ def main() -> int:
         "title": "Bird–Window Collisions in the US & Canada",
         "subtitle": f"{meta['date_min'][:4]}–{meta['date_max'][:4]} · reports attributed to buildings",
         "bins": [[v, c, lab] for v, c, lab in geolibre_project.BIRD_STOPS],
+        "explore_url": args.share_url,
         "chapters": [c.to_dict() for c in chapters],
     }, indent=2, ensure_ascii=False))
 
     project_url = site_url + PROJECT_NAME
-    explorer = f"{args.viewer.rstrip('/')}/?url={quote(project_url, safe='')}&layout=viewer"
+    viewer = f"{args.viewer.rstrip('/')}/?url={quote(project_url, safe='')}&layout=viewer"
     (SITE / "config.json").write_text(json.dumps({
-        "explorer_url": explorer,
+        "explorer_url": args.share_url,
+        "viewer_url": viewer,
         "project_url": project_url,
         "meta": {k: meta[k] for k in ("date_min", "date_max", "birds", "buildings_with_records",
                                       "records", "excluded", "overture_release", "generated")},
@@ -66,7 +73,8 @@ def main() -> int:
 
     print(f"wrote {PROJECT_NAME} ({(SITE / PROJECT_NAME).stat().st_size / 1e3:.0f} kB), "
           f"{len(chapters)} chapters")
-    print("explorer:", explorer)
+    print("explorer (share):", args.share_url)
+    print("read-only viewer:", viewer)
     return 0
 
 

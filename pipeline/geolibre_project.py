@@ -170,7 +170,7 @@ def build(data_url: str, chapters: list[Chapter], meta: dict) -> dict:
         enter += [{"layerId": pid, "opacity": 1.0 if c.show_points else 0.0, "duration": 1200}
                   for pid in pts_ids]
         authoring.add_story_chapter(
-            proj, c.title, description=c.description, center=list(c.center), zoom=c.zoom,
+            proj, c.title, description=c.geolibre_note + c.description, center=list(c.center), zoom=c.zoom,
             pitch=c.pitch, bearing=c.bearing, alignment=c.alignment, on_enter=enter, chapter_id=c.id,
         )
 
