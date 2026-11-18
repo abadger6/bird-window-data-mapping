@@ -4,6 +4,8 @@ Reported bird–window collisions, each attributed to the building where the
 bird was found and shown in 3D at the building's real height. Made for
 decision-makers and scientists.
 
+**Live:** https://abadger6.github.io/bird-window-data-mapping/ · [story](https://abadger6.github.io/bird-window-data-mapping/story/) · [explorer](https://web.geolibre.app/?url=https%3A%2F%2Fabadger6.github.io%2Fbird-window-data-mapping%2Fbird-collisions.geolibre&layout=viewer)
+
 The public site (`site/`) has three parts:
 
 | Part | What it is |

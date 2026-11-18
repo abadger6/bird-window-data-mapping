@@ -26,6 +26,13 @@ Items deliberately left for after launch.
   set `EXPLORER_VIEWER` in `.github/workflows/pages.yml`. See
   [docs/geolibre-evaluation.md](geolibre-evaluation.md).
 
+## Polish
+
+- [ ] **Story footer link contrast in GeoLibre.** In the explorer's in-app
+  story, the "Global Bird Collision Mapper" footer link draws dark blue on
+  the dark panel. GeoLibre styles that link; try a light inline colour in the
+  footer HTML in `pipeline/geolibre_project.py`, or the light story theme.
+
 ## Keeping the data current
 
 - [ ] **Document and/or automate the refresh.** Today it is manual:
