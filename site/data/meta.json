@@ -1,0 +1,56 @@
+{
+  "generated": "2026-11-18",
+  "overture_release": "2026-10-21.0",
+  "date_min": "1996-03-26",
+  "date_max": "2026-11-17",
+  "snap_max_m": 25.0,
+  "records_clean": 121179,
+  "birds_clean": 123651,
+  "matched_pct_by_country": {
+    "CA": 97.9,
+    "US": 95.7
+  },
+  "snap_m_median": 0.0,
+  "excluded": {
+    "home_buildings": 2729,
+    "home_records": 3942,
+    "home_birds": 4064,
+    "unmatched_records": 2851,
+    "unmatched_birds": 2892,
+    "total_birds": 6956
+  },
+  "records": 114386,
+  "birds": 116695,
+  "buildings_with_records": 6892,
+  "context_buildings": 13531,
+  "height_source": {
+    "overture": 3974,
+    "floors": 1121,
+    "assumed": 951,
+    "parts": 846
+  },
+  "recent_from_year": 2022,
+  "report_eras": [
+    {
+      "file": "reports_1996_2013.parquet",
+      "from": 1996,
+      "to": 2013,
+      "reports": 43067,
+      "birds": 43147
+    },
+    {
+      "file": "reports_2014_2020.parquet",
+      "from": 2014,
+      "to": 2020,
+      "reports": 26402,
+      "birds": 27233
+    },
+    {
+      "file": "reports_2021_2026.parquet",
+      "from": 2021,
+      "to": 2026,
+      "reports": 44917,
+      "birds": 46315
+    }
+  ]
+}

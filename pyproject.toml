@@ -1,0 +1,21 @@
+[project]
+name = "bird-window-data-mapping"
+version = "0.1.0"
+description = "Observed bird-window collisions mapped to 3D building footprints (US + Canada)"
+requires-python = ">=3.11"
+dependencies = [
+    "geopandas>=1.0",
+    "shapely>=2.0",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "pyarrow>=16",
+    "overturemaps>=0.12",
+    "geolibre==3.9.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

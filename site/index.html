@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bird–Window Collisions Map</title>
+<meta name="description" content="Reported bird–window collisions in the US and Canada, attributed to buildings and shown in 3D." />
+<style>
+  :root { --bg: #111318; --panel: #1a1c23; --text: #ececf1; --muted: #a2a3ad; --accent: #f0603a;
+    --border: #2d2f3a; --link: #ffb08f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 0 16px 64px; }
+  a { color: var(--link); }
+  .hero { padding: 64px 0 32px; }
+  h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 0 0 12px; }
+  .lede { color: #cfd0d6; font-size: 18px; max-width: 60ch; margin: 0; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 32px 0; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .stat b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+  .card h2 { margin: 0 0 8px; font-size: 22px; }
+  .card p { color: #cfd0d6; margin: 0 0 16px; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+    padding: 10px 18px; border-radius: 7px; font-weight: 600; }
+  .btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  section { margin-top: 48px; }
+  section h2 { font-size: 22px; margin: 0 0 12px; }
+  ul { padding-left: 20px; } li { margin: 6px 0; color: #cfd0d6; }
+  .muted { color: var(--muted); font-size: 14px; }
+  code { background: var(--panel); padding: 1px 5px; border-radius: 4px; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <h1>Bird–Window Collisions in the US &amp; Canada</h1>
+    <p class="lede">Reports of birds that struck buildings, each attributed to the building where it was
+      found and shown in 3D at the building's real height.</p>
+    <div class="stats" aria-live="polite">
+      <div class="stat"><b id="s-birds">–</b><span>birds reported</span></div>
+      <div class="stat"><b id="s-bldgs">–</b><span>buildings</span></div>
+      <div class="stat"><b id="s-years">–</b><span>years of reports</span></div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h2>The story</h2>
+      <p>A short scroll-through of where collisions are reported, the worst buildings, the role of fall
+        migration, and the species affected.</p>
+      <a class="btn" href="story/">Read the story</a>
+    </div>
+    <div class="card" id="explore">
+      <h2>The explorer</h2>
+      <p>The full interactive map in GeoLibre: 3D buildings, every report as a point, filters, and city
+        bookmarks.</p>
+      <a class="btn" id="explorer-link" href="#">Open the explorer</a>
+    </div>
+  </div>
+
+  <section>
+    <h2>Using the explorer</h2>
+    <ul>
+      <li><b>Building views.</b> Switch between all years, fall migration, spring migration and the last 5 years
+        in the Layers panel. Colour is birds reported; height is the building's height.</li>
+      <li><b>Report points</b> are split into three eras (1996–2013, 2014–2020, 2021–2026); the latest is on by
+        default. Each era has filters for species (type part of a name, e.g. “warbler”), outcome, season, year
+        and monitoring group. Set a filter on each era you have switched on.</li>
+      <li><b>Bookmarks</b> jump to cities with the most reports. Click a building or point for details.</li>
+      <li>Building totals in the explorer are fixed per view; they don't change when you filter the points.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Data</h2>
+    <ul>
+      <li><a href="data/buildings.parquet">buildings.parquet</a>: one row per building, with totals for every view</li>
+      <li><a href="data/reports.parquet">reports.parquet</a>: every published report</li>
+      <li><a id="project-link" href="bird-collisions.geolibre">bird-collisions.geolibre</a>: the GeoLibre project
+        (open it in GeoLibre's desktop or web app)</li>
+    </ul>
+    <p class="muted">GeoParquet files open in QGIS, DuckDB, GeoPandas and GeoLibre.</p>
+  </section>
+
+  <section>
+    <h2>About the data</h2>
+    <ul>
+      <li><b>Reports, not risk.</b> Counts reflect where volunteers looked as much as where birds died. Most reports
+        come from Toronto, where monitoring has run the longest; a building with no reports may never have been
+        checked.</li>
+      <li><b>Attribution.</b> Each report is assigned to the nearest building footprint within 25 m.</li>
+      <li><b>Privacy.</b> <span id="excluded">Reports at private homes</span>, and reports with no building
+        footprint nearby, are not shown.</li>
+      <li><b>Heights</b> come from Overture Maps, using the tallest tower section where one is modelled; buildings
+        with no height data are drawn at 6 m.</li>
+    </ul>
+    <p class="muted">Collision reports: Global Bird Collision Mapper (FLAP Canada and partner monitoring groups).
+      Buildings: © Overture Maps Foundation (ODbL), release <span id="release">–</span>.
+      Explorer built with <a href="https://geolibre.app/">GeoLibre</a>. Data built <span id="built">–</span>.</p>
+  </section>
+</main>
+<script>
+fetch("config.json").then((r) => r.json()).then((c) => {
+  const m = c.meta, fmt = (n) => Number(n).toLocaleString("en-US");
+  document.getElementById("s-birds").textContent = fmt(m.birds);
+  document.getElementById("s-bldgs").textContent = fmt(m.buildings_with_records);
+  document.getElementById("s-years").textContent = `${m.date_min.slice(0, 4)}–${m.date_max.slice(0, 4)}`;
+  document.getElementById("explorer-link").href = c.explorer_url;
+  document.getElementById("excluded").textContent =
+    `${fmt(m.excluded.total_birds)} birds reported at private homes`;
+  document.getElementById("release").textContent = m.overture_release;
+  document.getElementById("built").textContent = m.generated;
+}).catch(() => {});
+</script>
+</body>
+</html>

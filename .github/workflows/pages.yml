@@ -1,0 +1,51 @@
+name: Deploy site to GitHub Pages
+
+# Publishes site/: the landing page, the story page, the GeoParquet data and
+# the GeoLibre project. The project is rebuilt here so its data URLs point at
+# this repository's Pages address. The explorer itself is GeoLibre's web app
+# (EXPLORER_VIEWER), opened on our project with ?url=…&layout=viewer.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  EXPLORER_VIEWER: https://web.geolibre.app/
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+        id: pages
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - name: Build GeoLibre project for this Pages URL
+        run: >
+          uv run python scripts/05_build_site.py
+          --site-url "${{ steps.pages.outputs.base_url }}/"
+          --viewer "$EXPLORER_VIEWER"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
